@@ -1,2 +1,3 @@
-# ckad-learning
-Documentation for ckad lab setup
+# CKAD Learning Docs
+
+Certified Kubernetes Application Developer (CKAD) exam learning repo
