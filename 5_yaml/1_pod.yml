@@ -1,0 +1,25 @@
+apiVersion: v1      #Required
+kind: Pod           #Required
+metadata:           #Required
+  name: myapp
+  labels:
+    name: myapp
+    testlabel: mytest1   #Custom Label
+spec:                     #Required
+  containers:
+  - name: myapp-frontend
+    image: nginx
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+    - containerPort: 80
+  - name: myapp-backend
+    image: redis
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+    
