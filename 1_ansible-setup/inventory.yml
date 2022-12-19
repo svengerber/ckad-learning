@@ -1,0 +1,18 @@
+all:
+  hosts:
+      master1:
+        ansible_host: 172.16.0.101
+      worker1:
+        ansible_host: 172.16.0.201
+      worker2:
+        ansible_host: 172.16.0.202
+  children:
+    k8s:
+      children:
+        master:
+          hosts:
+            master1:
+        worker:
+          hosts:
+            worker1:
+            worker2:

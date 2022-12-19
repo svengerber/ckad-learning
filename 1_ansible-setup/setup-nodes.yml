@@ -1,0 +1,164 @@
+- name: base setup k8s nodes
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+
+  - name: apt | update and upgrade
+    ansible.builtin.apt:
+      update_cache: yes
+      upgrade: yes
+    notify: reboot
+
+  - name: apt | ca-certificates
+    apt:  
+      name: ca-certificates
+      state: present
+
+  - name: apt | apt-transport-https
+    apt:  
+      name: apt-transport-https
+      state: present
+
+  - name: apt | curl 
+    apt:  
+      name: curl 
+      state: present
+
+  - name: apt | gnupg  
+    apt:  
+      name: gnupg  
+      state: present
+
+  - name: apt | lsb-release 
+    apt:  
+      name: lsb-release 
+      state: present
+
+  - name: apt-key | add docker gpg
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      keyring: /etc/apt/trusted.gpg.d/docker.gpg
+
+  - name: apt-repo | add docker
+    ansible.builtin.apt_repository:
+      repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable"
+      state: present
+
+  - name: apt-key | add google gpg
+    ansible.builtin.apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      keyring: /etc/apt/trusted.gpg.d/google.gpg
+
+  - name: apt-repo | add google
+    ansible.builtin.apt_repository:
+      repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/google.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"
+      state: present
+
+  - name: apt | update
+    ansible.builtin.apt:
+      update_cache: yes
+      cache_valid_time: 86400
+
+  - name: apt | containerd
+    apt:  
+      name: containerd.io=1.6.13-1
+      state: present
+
+  - name: Hold containerd
+    ansible.builtin.dpkg_selections:
+      name: containerd.io
+      selection: hold
+
+  - name: apt | kubelet
+    apt:  
+      name: kubelet=1.26.0-00
+      state: present
+
+  - name: Hold kubelet
+    ansible.builtin.dpkg_selections:
+      name: kubelet
+      selection: hold
+
+  - name: apt | kubeadm
+    apt:  
+      name: kubeadm=1.26.0-00
+      state: present
+
+  - name: Hold kubeadm
+    ansible.builtin.dpkg_selections:
+      name: kubeadm
+      selection: hold
+
+  - name: apt | kubectl
+    apt:  
+      name: kubectl=1.26.0-00
+      state: present
+
+  - name: Disable SWAP in fstab
+    replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+    notify: reboot
+
+  - name: stop and disable apparmor
+    ansible.builtin.systemd:
+      name: apparmor
+      state: stopped
+      enabled: false
+    notify: reboot
+
+  - name: copy containerd config (systemd cgroup driver enabled)
+    ansible.builtin.template:
+      src: ./config.toml
+      dest: /etc/containerd/config.toml
+    notify: restart-containerd
+
+  - name: enable ip forwarding
+    ansible.posix.sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      sysctl_set: yes
+    notify: reboot
+
+  - name: Add the br_netfilter module
+    ansible.builtin.lineinfile:
+      path: /etc/modules
+      state: present
+      line: br_netfilter
+      regexp: '^br_netfilter'
+
+  - name: Add the overlay module
+    ansible.builtin.lineinfile:
+      path: /etc/modules
+      state: present
+      line: overlay
+      regexp: '^overlay'
+
+  - name: flush handlers
+    ansible.builtin.meta: flush_handlers
+
+  - name: enable iptables for bridged traffic
+    ansible.posix.sysctl:
+      name: net.bridge.bridge-nf-call-iptables
+      value: '1'
+      sysctl_set: yes
+    notify: reboot
+
+  - name: enable ip6tables for bridged traffic
+    ansible.posix.sysctl:
+      name: net.bridge.bridge-nf-call-ip6tables
+      value: '1'
+      sysctl_set: yes
+    notify: reboot
+
+  handlers:
+  - name: reboot
+    reboot:
+
+  - name: restart-containerd
+    ansible.builtin.systemd:
+      name: containerd
+      state: restarted
+
