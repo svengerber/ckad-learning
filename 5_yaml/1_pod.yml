@@ -15,6 +15,13 @@ spec:                     #Required
         cpu: "500m"
     ports:
     - containerPort: 80
+    command:
+      - sleep
+    args:
+      - "3600"
+    env:
+      - name: var1
+        value: data1
   - name: myapp-backend
     image: redis
     resources:
