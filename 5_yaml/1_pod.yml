@@ -6,13 +6,30 @@ metadata:           #Required
     name: myapp
     testlabel: mytest1   #Custom Label
 spec:                     #Required
+  securityContext:
+    runAsUser: 1000
+  serviceAccount: myaccount1
+  automountServiceAccountToken: false
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "blue"
+    effect: "PreferNoSchedule"
+  nodeSelector:
+    size: large
   containers:
   - name: myapp-frontend
     image: nginx
+    securityContext:
+      capabilities:
+        add: ["MAC_ADMIN"]
     resources:
       limits:
-        memory: "128Mi"
+        memory: "512Mi"
         cpu: "500m"
+      requests:
+        memory: "256Mi"
+        cpu: "200m"
     ports:
     - containerPort: 80
     command:
