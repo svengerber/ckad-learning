@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:  myjob01
+spec:
+  completions: 3   #Do until X Completions are met
+  parallelism: 3   #How many pods at the same time
+  backoffLimit: 10
+  template:
+    spec:
+      containers:
+      - name: math
+        image: ubuntu
+        command:
+        - "expr"
+        args:
+        - "3"
+        - "+"
+        - "2"
+      restartPolicy: Never

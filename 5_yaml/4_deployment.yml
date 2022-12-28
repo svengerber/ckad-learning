@@ -12,6 +12,9 @@ spec:
       containers:
       - name: name1
         image: nginx
+        ports:
+          - containerPort: 80
+            name: http-web-svc
   selector:
     matchLabels:
       type: test
