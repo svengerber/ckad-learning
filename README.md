@@ -1,3 +1,3 @@
-# CKAD Learning Docs
+# Random Notes
 
-Certified Kubernetes Application Developer (CKAD) exam learning repo
+Notes for all kind of stuff
